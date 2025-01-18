@@ -4,7 +4,6 @@ param (
 
 Clear-Host
 
-# Change to the directory where the script is located
 Set-Location -Path $PSScriptRoot
 
 function Extract-Liked {
@@ -101,7 +100,6 @@ foreach ($folder in $folders) {
     }
 }
 
-# Function to download videos from a list of links and save to a specified folder
 function Download-Videos {
     param (
         [array]$links,
@@ -112,12 +110,10 @@ function Download-Videos {
         $link = $linkObj.Link
         $date = $linkObj.Date
         $arguments = "-o `"$outputFolder/$date - %(id)s.%(ext)s`" $link"
-        Start-Process -FilePath "$PSScriptRoot\yt-dlp\yt-dlp.cmd" -ArgumentList $arguments -NoNewWindow -Wait
+        Start-Process -FilePath "yt-dlp" -ArgumentList $arguments -NoNewWindow -Wait
     }
 }
 
-
-# Extract and download videos from each category
 $likedLinks = Extract-Liked -jsonFile $jsonFile
 Download-Videos -links $likedLinks -outputFolder "liked_videos"
 
