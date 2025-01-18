@@ -1,56 +1,69 @@
 # TikTok DL
 
-This project is designed to download videos using `yt-dlp` from multiple text files. The videos are categorized into three folders based on their status: liked, favorites, shared, uploaded. I created this in PowerShell to be more compatible with people with less technical knowledge.
+A PowerShell-based project to download TikTok videos by either:
+1. **Exported JSON** (Liked, Favorites, Shared, Uploaded)  
+2. **Scraping a Public Profile** (via `extract_urls.py` + Python)
 
 ## Project Structure
 
 ```
 download_videos_project
-├── download_videos.ps1       # PowerShell script for downloading videos
-├── yt-dlp                    # Folder for yt-dlp
-└── README.md                 # Documentation for the project
+├── download_videos.ps1       # PowerShell script (menu-driven)
+├── extract_urls.py           # Python script for scraping public profiles
+└── README.md                 # Documentation
 ```
 
 ## Prerequisites
 
-- Ensure you have `python` installed on your system. You can download and install from:
-  ```
-  https://www.python.org/ftp/python/3.13.1/python-3.13.1-amd64.exe
-  ```
-- Download yt-dlp and extract the files to a folder named `yt-dlp`. This folder needs to be with the `download_videos.ps1` script.
+### Homebrew (Windows or macOS)
 
-  ```
-  https://github.com/yt-dlp/yt-dlp
-  ```
+1. **Install Homebrew**  
+   - **macOS**: [brew.sh](https://brew.sh/)  
+   - **Windows**: [Homebrew for Windows](https://github.com/Homebrew-Install/homebrew-windows)  
 
-- PowerShell should be available on your system to run the script.
+2. **Install PowerShell & yt-dlp via Homebrew**  
+   ```bash
+   brew install --cask powershell
+   brew install yt-dlp
+   ```
+
+3. **Install Python**  
+   - [python.org](https://www.python.org/downloads)  
+   - Or via Homebrew:
+     ```bash
+     brew install python
+     ```
 
 ## Usage
 
-1. Download your TikTok data as a json and copy the user_data_tiktok.json from the TikTok_Data_xxxxxxxxxx.zip to the same directory as the download_videos.ps1 script.
-
-2. Open PowerShell from the start menu and change the directory to the script directory.
-   ```
-   ex command:     cd C:\Users\MyUserName\Desktop\TikTok-Video-Dl)
-   ```
-
-4. Run the PowerShell script:
-   ```
+1. **Place Scripts**  
+   - `download_videos.ps1` and `extract_urls.py` in the **same folder**.
+2. **Open PowerShell**  
+   - Change directory to this project folder:
+     ```powershell
+     cd "C:\Users\MyUserName\Desktop\TikTok-Video-Dl"
+     ```
+3. **Run the Script**  
+   ```powershell
    .\download_videos.ps1
    ```
-
-5. The videos will be downloaded into their respective folders:
-   - Liked videos will be saved in the `liked_videos` folder.
-   - Favorite videos will be saved in the `fav_videos` folder.
-   - Shared videos will be saved in the `shared_videos` folder.
-   - Uploaded videos will be saved in the `uploaded_videos` folder.
+4. **Choose an Option**:
+   1. **Use TikTok JSON**  
+      - Copy `user_data_tiktok.json` into the project folder.  
+      - Pick which categories (Liked, Favorites, Shared, Uploaded).  
+      - Videos download into `liked_videos`, `fav_videos`, `shared_videos`, `uploaded_videos`.
+   2. **Scrape a Public TikTok Profile**  
+      - Enter your username (e.g., `wesleyfranks`).  
+      - The script calls `extract_urls.py` to find video URLs.  
+      - Videos download into the `profile_scrape` folder.
 
 ## Video Format
 
-All downloaded videos will be saved using the example format:
+Files are named:
 ```
-date - video id.ext
+YYYY-MM-DD HH-mm - videoid.ext
 
+Example:
 2025-01-01 12-42 - 32937297237293.mp4
 ```
 
