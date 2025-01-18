@@ -6,13 +6,14 @@ Clear-Host
 Set-Location -Path $PSScriptRoot
 
 #
-# --- SECTION 1: JSON-BASED FUNCTIONS ---
+# --- SECTION 1: JSON-BASED FUNCTIONS (Liked, Favorites, Shared) ---
 #
 
 function Extract-Liked {
     param ([string]$jsonFile)
     $data = Get-Content -Path $jsonFile | ConvertFrom-Json
     $links = @()
+
     foreach ($video in $data.Activity.'Like List'.ItemFavoriteList) {
         $linkKey = $video.PSObject.Properties.Name | Where-Object { $_ -match 'link' }
         $dateKey = $video.PSObject.Properties.Name | Where-Object { $_ -match 'date' }
@@ -32,6 +33,7 @@ function Extract-Favs {
     param ([string]$jsonFile)
     $data = Get-Content -Path $jsonFile | ConvertFrom-Json
     $links = @()
+
     foreach ($video in $data.Activity.'Favorite Videos'.FavoriteVideoList) {
         $linkKey = $video.PSObject.Properties.Name | Where-Object { $_ -match 'link' }
         $dateKey = $video.PSObject.Properties.Name | Where-Object { $_ -match 'date' }
@@ -51,27 +53,8 @@ function Extract-Shared {
     param ([string]$jsonFile)
     $data = Get-Content -Path $jsonFile | ConvertFrom-Json
     $links = @()
-    foreach ($video in $data.Activity.'Share History'.ShareHistoryList) {
-        $linkKey = $video.PSObject.Properties.Name | Where-Object { $_ -match 'link' }
-        $dateKey = $video.PSObject.Properties.Name | Where-Object { $_ -match 'date' }
-        if ($linkKey -and $dateKey) {
-            $dateFormatted = $video.$dateKey -replace ":", "-"
-            $dateFormatted = $dateFormatted.Substring(0, 16)
-            $links += [PSCustomObject]@{
-                Link = $video.$linkKey
-                Date = $dateFormatted
-            }
-        }
-    }
-    return $links
-}
 
-function Extract-Uploaded {
-    param ([string]$jsonFile)
-    $data = Get-Content -Path $jsonFile | ConvertFrom-Json
-    $videoList = $data.Video.Videos.VideoList
-    $links = @()
-    foreach ($video in $videoList) {
+    foreach ($video in $data.Activity.'Share History'.ShareHistoryList) {
         $linkKey = $video.PSObject.Properties.Name | Where-Object { $_ -match 'link' }
         $dateKey = $video.PSObject.Properties.Name | Where-Object { $_ -match 'date' }
         if ($linkKey -and $dateKey) {
@@ -95,8 +78,7 @@ $folders = @(
     "liked_videos",
     "fav_videos",
     "shared_videos",
-    "uploaded_videos",
-    "profile_scrape"          # for URLs scraped from a public profile
+    "profile_scrape"
 )
 foreach ($folder in $folders) {
     if (-not (Test-Path $folder)) {
@@ -109,6 +91,7 @@ function Download-Videos {
         [array]$links,
         [string]$outputFolder
     )
+
     foreach ($linkObj in $links) {
         $link = $linkObj.Link
         $date = $linkObj.Date
@@ -119,7 +102,7 @@ function Download-Videos {
 }
 
 #
-# --- SECTION 3: SCRAPE-BASED DOWNLOAD ---
+# --- SECTION 3: SCRAPE-BASED DOWNLOAD (Option 4) ---
 #
 
 function Scrape-TikTokProfile {
@@ -133,7 +116,7 @@ function Scrape-TikTokProfile {
     $profileUrl = "https://www.tiktok.com/@$username"
     Write-Host "`nScraping URLs from: $profileUrl"
 
-    # Call the Python script (extract_urls.py) which prints each URL line by line
+    # Call the Python script (extract_urls.py) which prints each URL
     $scrapedUrls = python .\extract_urls.py $profileUrl
     if (-not $scrapedUrls) {
         Write-Host "No URLs found or scrape failed."
@@ -156,78 +139,34 @@ function Scrape-TikTokProfile {
 # --- SECTION 4: MAIN MENU ---
 #
 
-Write-Host "Please choose an option:"
-Write-Host "  1) Use TikTok JSON data (Liked, Favorites, Shared, Uploaded)"
-Write-Host "  2) Scrape from a public TikTok profile (e.g., @username)"
+Write-Host ""
+Write-Host "Choose which TikTok videos to download:"
+Write-Host "  1) Liked (heart icon) - JSON data"
+Write-Host "  2) Favorites (bookmark icon) - JSON data"
+Write-Host "  3) Shared - JSON data"
+Write-Host "  4) Profile Scrape (uploaded videos/public feed) - uses Python"
 Write-Host ""
 
-$mainChoice = Read-Host -Prompt "Enter your choice (1 or 2)"
+$choice = Read-Host -Prompt "Enter your selection (1,2,3,4)"
 
-switch ($mainChoice) {
+switch ($choice) {
     "1" {
-        Write-Host "`nSelect which categories of videos you want to download."
-        Write-Host "(Note: 'Liked' = heart icon, 'Favorite' = bookmark icon.)"
-        Write-Host "Type 'all' to download everything, or enter numbers separated by commas:"
-        Write-Host "  1) Liked (heart icon)... can take a VERY long time."
-        Write-Host "  2) Favorites (bookmark icon)... might also be quite large."
-        Write-Host "  3) Shared"
-        Write-Host "  4) Uploaded"
-        Write-Host ""
-
-        $choice = Read-Host -Prompt "Enter selection (e.g., 'all' or '1,2,3,4')"
-
-        if ($choice.ToLower() -eq 'all') {
-            Write-Host "`nDownloading Liked (heart icon)..."
-            $likedLinks = Extract-Liked -jsonFile $jsonFile
-            Download-Videos -links $likedLinks -outputFolder "liked_videos"
-
-            Write-Host "`nDownloading Favorites (bookmark icon)..."
-            $favLinks = Extract-Favs -jsonFile $jsonFile
-            Download-Videos -links $favLinks -outputFolder "fav_videos"
-
-            Write-Host "`nDownloading Shared..."
-            $sharedLinks = Extract-Shared -jsonFile $jsonFile
-            Download-Videos -links $sharedLinks -outputFolder "shared_videos"
-
-            Write-Host "`nDownloading Uploaded..."
-            $uploadedLinks = Extract-Uploaded -jsonFile $jsonFile
-            Download-Videos -links $uploadedLinks -outputFolder "uploaded_videos"
-
-        } else {
-            $selections = $choice -split ',' | ForEach-Object { $_.Trim() }
-
-            foreach ($item in $selections) {
-                switch ($item) {
-                    "1" {
-                        Write-Host "`nDownloading Liked (heart icon)..."
-                        $likedLinks = Extract-Liked -jsonFile $jsonFile
-                        Download-Videos -links $likedLinks -outputFolder "liked_videos"
-                    }
-                    "2" {
-                        Write-Host "`nDownloading Favorites (bookmark icon)..."
-                        $favLinks = Extract-Favs -jsonFile $jsonFile
-                        Download-Videos -links $favLinks -outputFolder "fav_videos"
-                    }
-                    "3" {
-                        Write-Host "`nDownloading Shared..."
-                        $sharedLinks = Extract-Shared -jsonFile $jsonFile
-                        Download-Videos -links $sharedLinks -outputFolder "shared_videos"
-                    }
-                    "4" {
-                        Write-Host "`nDownloading Uploaded..."
-                        $uploadedLinks = Extract-Uploaded -jsonFile $jsonFile
-                        Download-Videos -links $uploadedLinks -outputFolder "uploaded_videos"
-                    }
-                    default {
-                        Write-Host "`nInvalid selection: $item"
-                    }
-                }
-            }
-        }
-        Write-Host "`nJSON-based download finished!"
+        Write-Host "`nDownloading Liked..."
+        $likedLinks = Extract-Liked -jsonFile $jsonFile
+        Download-Videos -links $likedLinks -outputFolder "liked_videos"
     }
     "2" {
-        # Scrape-based approach
+        Write-Host "`nDownloading Favorites..."
+        $favLinks = Extract-Favs -jsonFile $jsonFile
+        Download-Videos -links $favLinks -outputFolder "fav_videos"
+    }
+    "3" {
+        Write-Host "`nDownloading Shared..."
+        $sharedLinks = Extract-Shared -jsonFile $jsonFile
+        Download-Videos -links $sharedLinks -outputFolder "shared_videos"
+    }
+    "4" {
+        Write-Host "`nScraping Public Profile (uploaded videos / user feed)..."
         Scrape-TikTokProfile
     }
     default {
