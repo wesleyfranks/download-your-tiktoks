@@ -22,7 +22,8 @@ download_videos_project
 
 1. Download your TikTok data as a json and copy the user_data_tiktok.json from the TikTok_Data_xxxxxxxxxx.zip to the same directory as the download_videos.ps1 script.
 
-2. Open PowerShell from the start menu and change the directory to the script directory. (ex command: cd C:\Users\MyUserName\Desktop\TikTok-Video-Dl)
+2. Open PowerShell from the start menu and change the directory to the script directory.
+   ```ex command: cd C:\Users\MyUserName\Desktop\TikTok-Video-Dl)  ```
 
 3. Run the PowerShell script:
    ```
@@ -41,9 +42,9 @@ All downloaded videos will be saved using the example format:
 ```
 date - video id.ext
 
-2025-01-01 - 32937297237293.mp4
+2025-01-01 12-42 - 32937297237293.mp4
 ```
 
 ## License
 
-This project is open-source and available for modification and distribution.
+MIT
